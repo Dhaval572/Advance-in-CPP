@@ -95,10 +95,5 @@ C++ is one of the most **powerful, fastest, and versatile** programming language
 🔥 **Become a C++ GOD, and no developer can challenge you!** 🔥  
 
 ---
-
-### ⭐ Follow for More:
-- **GitHub:** [Your GitHub Profile Link]
-- **LinkedIn:** [Your LinkedIn Profile Link]
-- **Twitter:** [Your Twitter Handle]  
-
+ 
 💪 **Start mastering C++ today and dominate the programming world!** 🚀  
