@@ -2,19 +2,19 @@
 #include <iostream>
 using namespace std;
 
-#ifdef _WIN32
-    #define PLATFORM "Windows"
-#elif __linux__
-    #define PLATFORM "Linux"
-#elif __APPLE__
-    #define PLATFORM "MacOS"
-#else
-    #define PLATFORM "Unknown OS"
-#endif
-
 int main()
 {
-    cout << "Running on " << PLATFORM ;
+    #ifdef _WIN32
+        #define PLATFORM "Windows"
+    #elif __linux__
+        #define PLATFORM "Linux"
+    #elif __APPLE__
+        #define PLATFORM "MacOS"
+    #else
+        #define PLATFORM "Unknown OS"
+    #endif
+
+    cout << "Running on " << PLATFORM;
     return 0;
 }
 /*
