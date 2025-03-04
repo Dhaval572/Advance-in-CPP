@@ -3,10 +3,10 @@
 using namespace std;
 
 void hello() { cout << "Hello"; }
-void (*funcPtr)() = hello;
 
 int main()
 {
+    void (*funcPtr)() = hello;
     funcPtr(); 
     return 0;
 }
