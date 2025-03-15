@@ -16,5 +16,5 @@ int main()
     int *ptr = (int *)&obj;
     
     // *ptr = 99; // You can also modify the private members
-    cout << "Hacked secretNumber: " << *ptr << std::endl;
+    cout << "privateData is: " << *ptr << std::endl;
 }
