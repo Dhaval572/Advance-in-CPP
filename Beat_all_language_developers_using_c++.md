@@ -6,7 +6,7 @@ C++ is one of the most **powerful, fastest, and versatile** programming language
 
 ## 🔥 The Main Power of C++ to Beat Other Languages
 
-### ✅ 1. Performance Beast (Beats Python, Java, C#)
+### ✅ 1. Performance Beast (Beats Python, Java)
 - **C++ is one of the fastest languages** due to **direct memory management** and **no runtime overhead**.  
 - **Key Edge:** When speed matters (e.g., Game Engines, High-Frequency Trading, AI Optimizations), **C++ destroys Python and Java**.  
 - **How to Master?** Learn **efficient memory management, cache optimization, and inline assembly**.  
@@ -16,7 +16,7 @@ C++ is one of the most **powerful, fastest, and versatile** programming language
 
 ---
 
-### ✅ 2. Ultimate Control Over Hardware (Beats Rust, Go, C#)
+### ✅ 2. Ultimate Control Over Hardware (Beats Rust, Go)
 - C++ allows **direct hardware manipulation** using **pointers, inline assembly, SIMD, and CPU optimizations**.  
 - **Key Edge:** Essential for **embedded systems, OS development, networking, and drivers**.  
 - **How to Master?** Learn **low-level memory management, custom allocators, and CPU optimizations**.  
