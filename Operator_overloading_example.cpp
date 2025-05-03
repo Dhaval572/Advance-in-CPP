@@ -7,6 +7,8 @@ class Vector
 public:
     int x, y;
 
+    Vector(int a, int b) : x(a), y(b){}
+
     // Overloading of + operator
     Vector operator+(const Vector &other)
     {
@@ -25,7 +27,6 @@ class Array
     int data[10];
 
 public:
-
     // Overloading of subscript operator
     int &operator[](int index)
     {
