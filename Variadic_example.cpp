@@ -1,19 +1,17 @@
-// Variadic example in c++
+// Variadic in modern c++ ( type safe )
 #include <iostream>
 using namespace std;
 
-// Works as base case
-void print(){ cout << '\n'; }
-
-template <typename T, typename... Args>
-void print(T first, Args... rest)
+// ( Note: you can also pass the object as argument in this )
+template <typename... Args>
+void print(Args... args)
 {
-    cout << first << " ";
-    print(rest...);
+    ((cout << args << " "), ...);
+    cout << '\n';
 }
 
 int main()
 {
-    print(324,23.3344f,'g', "Xyz");
+    print(10, 20, 30, 'e', "str", 3434.553f); 
     return 0;
 }
