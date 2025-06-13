@@ -12,6 +12,7 @@ public:
     }
 
     float getData(){ return Get().dataMember; }
+    void setData(float value) { dataMember = value; }
     void Function() { cout << "I'm function of Singleton class\n"; }
 
 private:
@@ -27,13 +28,16 @@ int main()
     // First call to Get() creates the Singleton instance (constructor runs once)
     Singleton &obj = Singleton::Get();
     obj.Function();
-    cout << "Data of the obj is: " << obj.getData() ;
+    cout << "Default data of the obj is: " << obj.getData() << endl;
+    obj.setData(42.0f);
+    cout << "Setted data of the obj is: " << obj.getData() << endl;
 
-    printf("\n\nObject 2 data");
+    printf("\n\nObject 2 data\n");
 
     Singleton &obj2 = Singleton::Get();
     obj2.Function();
-    cout << "Data of the obj2 is: " << obj.getData() << endl;
+    obj2.setData(55.345f);
+    cout << "Setted data of the obj2 is: " << obj2.getData() << endl;
 
     // obj2 = obj; // Will return error cause of no copy assginment allows ( Line no. 20 )
     // Singleton obj3 = Singleton::Get(); // Will also give error because not copy allows ( Line no. 19 )
