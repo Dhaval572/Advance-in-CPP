@@ -24,7 +24,7 @@ private:
 
 int main()
 {
-    // It's nothing but the Constructor call of Singleton class
+    // First call to Get() creates the Singleton instance (constructor runs once)
     Singleton &obj = Singleton::Get();
     obj.Function();
     cout << "Data of the obj is: " << obj.getData() ;
