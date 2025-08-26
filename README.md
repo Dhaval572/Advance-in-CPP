@@ -1,10 +1,11 @@
-# Advanced C++ Repository
+# About 
 
-This repository is dedicated to **Advanced C++ concepts**. It is designed for anyone looking to deepen their understanding of modern C++ features and best practices.  
+This repository is dedicated to **Advanced C++ concepts**. It is designed for anyone looking to deepen their understanding of modern C++ features, best practices, and also serves as a **recap of core C++ features**.  
 
 ## What You Will Find Here
 - Detailed explanations of advanced C++ concepts.  
 - Modern C++ features and their practical usage.  
+- Recap of fundamental C++ features for a solid foundation.  
 - Examples and insights to help you write efficient and clean C++ code.  
 
 ## Updates
