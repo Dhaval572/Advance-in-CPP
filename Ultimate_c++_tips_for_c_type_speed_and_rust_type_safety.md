@@ -43,13 +43,16 @@ auto shared = std::make_shared<Widget>();
 
 ```cpp
 // ❌ BAD: Pointer decay loses size info
-void process(int* data, size_t size) {
+void process(int* data, size_t size)
+{
     data[100] = 0; // Potential buffer overflow
 }
 
 // ✅ GOOD: Bounds-aware view
-void process(std::span<int> data) {
-    if (data.size() > 100) {
+void process(std::span<int> data)
+{
+    if (data.size() > 100)
+    {
         data[100] = 0; // Size is known
     }
 }
@@ -63,13 +66,15 @@ process(vec); // Automatic conversion, size preserved
 
 ```cpp
 // ❌ BAD: Null-terminated strings are error-prone
-void print(const char* str) {
+void print(const char* str)
+{
     if (str == nullptr) return;
     std::cout << str;
 }
 
 // ✅ GOOD: Length-aware, no null termination required
-void print(std::string_view str) {
+void print(std::string_view str)
+{
     std::cout << str; // Size always known
 }
 
@@ -112,7 +117,8 @@ arr[5] = 42;    // Fast, unchecked
 
 ```cpp
 // ✅ GOOD: Move automatically applied (RVO/NRVO)
-std::vector<int> getData() {
+std::vector<int> getData()
+{
     std::vector<int> result(1000000);
     return result; // Move or elision, never copy
 }
@@ -122,20 +128,24 @@ std::vector<int> data = getData();
 myObject.setData(std::move(data)); // data is now empty
 
 // Custom type with move semantics
-class BigData {
+class BigData
+{
     int* data;
     size_t size;
 public:
     // Move constructor
     BigData(BigData&& other) noexcept 
-        : data(other.data), size(other.size) {
+        : data(other.data), size(other.size)
+    {
         other.data = nullptr;
         other.size = 0;
     }
     
     // Move assignment
-    BigData& operator=(BigData&& other) noexcept {
-        if (this != &other) {
+    BigData& operator=(BigData&& other) noexcept
+    {
+        if (this != &other)
+        {
             delete[] data;
             data = other.data;
             size = other.size;
@@ -157,13 +167,15 @@ public:
 ```cpp
 // ✅ Zero-overhead wrapper functions
 template<typename T>
-void wrapper(T&& arg) {
+void wrapper(T&& arg)
+{
     actualFunction(std::forward<T>(arg));
 }
 
 // Factory function example
 template<typename T, typename... Args>
-std::unique_ptr<T> make_unique_cached(Args&&... args) {
+std::unique_ptr<T> make_unique_cached(Args&&... args)
+{
     return std::make_unique<T>(std::forward<Args>(args)...);
 }
 ```
@@ -173,14 +185,16 @@ std::unique_ptr<T> make_unique_cached(Args&&... args) {
 ```cpp
 // ❌ BAD: Multiple reallocations
 std::vector<int> vec;
-for (int i = 0; i < 10000; ++i) {
+for (int i = 0; i < 10000; ++i)
+{
     vec.push_back(i); // Reallocates ~log(n) times
 }
 
 // ✅ GOOD: Single allocation
 std::vector<int> vec;
 vec.reserve(10000);
-for (int i = 0; i < 10000; ++i) {
+for (int i = 0; i < 10000; ++i)
+{
     vec.push_back(i);
 }
 ```
@@ -188,7 +202,8 @@ for (int i = 0; i < 10000; ++i) {
 ### Emplace Instead of Push/Insert
 
 ```cpp
-struct Widget {
+struct Widget
+{
     Widget(int x, std::string s) : x(x), s(std::move(s)) {}
     int x;
     std::string s;
@@ -210,10 +225,12 @@ std::string small = "hello";      // Stack only, no heap
 std::string large = "very long string that exceeds SSO buffer"; // Heap
 
 // Design with SSO in mind
-void processMany() {
+void processMany()
+{
     std::vector<std::string> names;
     names.reserve(1000);
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 1000; ++i)
+    {
         names.emplace_back("User" + std::to_string(i)); // SSO-friendly
     }
 }
@@ -223,7 +240,8 @@ void processMany() {
 
 ```cpp
 // ✅ GOOD: Compile-time when possible
-constexpr int factorial(int n) {
+constexpr int factorial(int n)
+{
     return n <= 1 ? 1 : n * factorial(n - 1);
 }
 
@@ -231,9 +249,11 @@ constexpr int result = factorial(5); // Computed at compile time
 int runtime = factorial(getUserInput()); // Computed at runtime
 
 // constexpr with containers (C++20)
-constexpr auto buildLookupTable() {
+constexpr auto buildLookupTable()
+{
     std::array<int, 256> table{};
-    for (int i = 0; i < 256; ++i) {
+    for (int i = 0; i < 256; ++i)
+    {
         table[i] = i * i;
     }
     return table;
@@ -245,19 +265,27 @@ constexpr auto lookup = buildLookupTable(); // Compile-time!
 ### Branch Prediction Hints (C++20)
 
 ```cpp
-int process(int value) {
-    if (value > 0) [[likely]] {
+int process(int value)
+{
+    if (value > 0) [[likely]]
+    {
         return fastPath(value);
-    } else [[unlikely]] {
+    }
+    else [[unlikely]]
+    {
         return slowPath(value);
     }
 }
 
 // Use in loops
-for (int i = 0; i < 1000000; ++i) {
-    if (data[i] > threshold) [[unlikely]] {
+for (int i = 0; i < 1000000; ++i)
+{
+    if (data[i] > threshold) [[unlikely]]
+    {
         handleRareCase();
-    } else [[likely]] {
+    }
+    else [[likely]]
+    {
         normalProcessing();
     }
 }
@@ -267,20 +295,23 @@ for (int i = 0; i < 1000000; ++i) {
 
 ```cpp
 // ❌ BAD: Virtual call overhead
-class Base {
+class Base
+{
     virtual void process() = 0;
 };
 
 // ✅ GOOD: Template-based polymorphism (static dispatch)
 template<typename T>
-void process(T& obj) {
+void process(T& obj)
+{
     obj.process(); // Inlined, no vtable lookup
 }
 
 // Or use std::variant for type-safe unions
 using Shape = std::variant<Circle, Square, Triangle>;
 
-void draw(const Shape& shape) {
+void draw(const Shape& shape)
+{
     std::visit([](const auto& s) { s.draw(); }, shape);
 }
 ```
@@ -289,7 +320,8 @@ void draw(const Shape& shape) {
 
 ```cpp
 // ❌ BAD: Poor cache locality
-struct Node {
+struct Node
+{
     int data;
     Node* next; // Scattered in memory
 };
@@ -298,12 +330,14 @@ struct Node {
 std::vector<int> data; // Cache-friendly
 
 // Structure of Arrays (SoA) for better vectorization
-struct ParticlesAoS {
+struct ParticlesAoS
+{
     struct Particle { float x, y, z; };
     std::vector<Particle> particles; // x,y,z,x,y,z...
 };
 
-struct ParticlesSoA {
+struct ParticlesSoA
+{
     std::vector<float> x; // x,x,x,x...
     std::vector<float> y; // y,y,y,y...
     std::vector<float> z; // z,z,z,z...
@@ -338,7 +372,8 @@ void process(std::vector<int> data) { /* ... */ }
 void process(const std::vector<int>& data) { /* ... */ }
 
 // ✅ GOOD: Pass by value when you need a copy anyway
-void store(std::vector<int> data) {
+void store(std::vector<int> data)
+{
     member = std::move(data);
 }
 ```
@@ -352,7 +387,8 @@ void store(std::vector<int> data) {
 ```cpp
 // ✅ Clean unpacking of tuples, pairs, structs
 std::map<std::string, int> map;
-for (const auto& [key, value] : map) {
+for (const auto& [key, value] : map)
+{
     std::cout << key << ": " << value << "\n";
 }
 
@@ -369,16 +405,19 @@ auto [a, b, c] = arr;
 
 ```cpp
 // ✅ Limit variable scope
-if (auto it = map.find(key); it != map.end()) {
+if (auto it = map.find(key); it != map.end())
+{
     use(it->second);
 } // it destroyed here
 
-if (auto [iter, inserted] = set.insert(value); inserted) {
+if (auto [iter, inserted] = set.insert(value); inserted)
+{
     std::cout << "Inserted: " << *iter << "\n";
 }
 
 // switch with initializer
-switch (auto val = getValue(); val) {
+switch (auto val = getValue(); val)
+{
     case 1: handle1(); break;
     case 2: handle2(); break;
     default: handleDefault();
@@ -389,19 +428,22 @@ switch (auto val = getValue(); val) {
 
 ```cpp
 // ❌ BAD: Magic values
-int find(const std::vector<int>& vec, int value) {
+int find(const std::vector<int>& vec, int value)
+{
     auto it = std::find(vec.begin(), vec.end(), value);
     return it != vec.end() ? *it : -1; // -1 is magic value
 }
 
 // ✅ GOOD: Explicit optional
-std::optional<int> find(const std::vector<int>& vec, int value) {
+std::optional<int> find(const std::vector<int>& vec, int value)
+{
     auto it = std::find(vec.begin(), vec.end(), value);
     return it != vec.end() ? std::optional(*it) : std::nullopt;
 }
 
 // Usage patterns
-if (auto result = find(vec, 42)) {
+if (auto result = find(vec, 42))
+{
     std::cout << "Found: " << *result << "\n";
 }
 
@@ -423,19 +465,26 @@ v = 3.14;
 v = "hello";
 
 // Type-safe visitation
-std::visit([](auto&& arg) {
+std::visit([](auto&& arg)
+{
     using T = std::decay_t<decltype(arg)>;
-    if constexpr (std::is_same_v<T, int>) {
+    if constexpr (std::is_same_v<T, int>)
+    {
         std::cout << "int: " << arg << "\n";
-    } else if constexpr (std::is_same_v<T, double>) {
+    }
+    else if constexpr (std::is_same_v<T, double>)
+    {
         std::cout << "double: " << arg << "\n";
-    } else {
+    }
+    else
+    {
         std::cout << "string: " << arg << "\n";
     }
 }, v);
 
 // Get value safely
-if (auto* pval = std::get_if<int>(&v)) {
+if (auto* pval = std::get_if<int>(&v))
+{
     std::cout << "int: " << *pval << "\n";
 }
 ```
@@ -452,7 +501,8 @@ auto even = vec
     | std::views::filter([](int n) { return n % 2 == 0; })
     | std::views::transform([](int n) { return n * n; });
 
-for (int n : even) { // Computed on iteration
+for (int n : even) // Computed on iteration
+{
     std::cout << n << " "; // 4 16 36 64 100
 }
 
@@ -462,7 +512,8 @@ auto skip2 = vec | std::views::drop(2);
 auto reversed = vec | std::views::reverse;
 
 // Generate ranges
-for (int i : std::views::iota(0, 10)) {
+for (int i : std::views::iota(0, 10))
+{
     std::cout << i << " "; // 0 1 2 3 4 5 6 7 8 9
 }
 ```
@@ -472,36 +523,42 @@ for (int i : std::views::iota(0, 10)) {
 ```cpp
 // ❌ BAD: Unclear template requirements
 template<typename T>
-T add(T a, T b) {
+T add(T a, T b)
+{
     return a + b; // Cryptic error if T doesn't support +
 }
 
 // ✅ GOOD: Explicit requirements
 template<typename T>
-concept Addable = requires(T a, T b) {
+concept Addable = requires(T a, T b)
+{
     { a + b } -> std::convertible_to<T>;
 };
 
 template<Addable T>
-T add(T a, T b) {
+T add(T a, T b)
+{
     return a + b; // Clear error messages
 }
 
 // Standard concepts
 template<std::integral T>
-T increment(T value) {
+T increment(T value)
+{
     return value + 1;
 }
 
 // Custom concepts
 template<typename T>
-concept Drawable = requires(T obj) {
+concept Drawable = requires(T obj)
+{
     { obj.draw() } -> std::same_as<void>;
     { obj.getPosition() } -> std::convertible_to<Point>;
 };
 
 template<Drawable T>
-void render(const T& object) {
+void render(const T& object)
+{
     object.draw();
 }
 ```
@@ -510,8 +567,10 @@ void render(const T& object) {
 
 ```cpp
 // ✅ Rust-like Result type
-std::expected<int, std::string> divide(int a, int b) {
-    if (b == 0) {
+std::expected<int, std::string> divide(int a, int b)
+{
+    if (b == 0)
+    {
         return std::unexpected("Division by zero");
     }
     return a / b;
@@ -519,9 +578,12 @@ std::expected<int, std::string> divide(int a, int b) {
 
 // Usage
 auto result = divide(10, 2);
-if (result) {
+if (result)
+{
     std::cout << "Result: " << *result << "\n";
-} else {
+}
+else
+{
     std::cerr << "Error: " << result.error() << "\n";
 }
 
@@ -534,27 +596,31 @@ auto final = divide(10, 2)
 ### Designated Initializers (C++20)
 
 ```cpp
-struct Config {
+struct Config
+{
     int timeout = 30;
     bool verbose = false;
     std::string path = "/default";
 };
 
 // ✅ Clear initialization
-Config cfg {
+Config cfg
+{
     .timeout = 60,
     .verbose = true
     // path uses default
 };
 
 // Nested structs
-struct Server {
+struct Server
+{
     std::string host;
     int port;
     Config config;
 };
 
-Server server {
+Server server
+{
     .host = "localhost",
     .port = 8080,
     .config = {.timeout = 120, .verbose = true}
@@ -593,12 +659,14 @@ std::format("Name: {}, Age: {}, Score: {:.1f}", name, age, score);
 
 ```cpp
 // constexpr: May run at compile-time
-constexpr int square(int x) {
+constexpr int square(int x)
+{
     return x * x;
 }
 
 // consteval: MUST run at compile-time (C++20)
-consteval int compiletime_square(int x) {
+consteval int compiletime_square(int x)
+{
     return x * x;
 }
 
@@ -609,9 +677,11 @@ constexpr int c = compiletime_square(5); // Compile-time
 // int d = compiletime_square(getUserInput()); // ERROR!
 
 // Complex compile-time computation
-consteval auto generateTable() {
+consteval auto generateTable()
+{
     std::array<int, 100> table{};
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 100; ++i)
+    {
         table[i] = i * i;
     }
     return table;
@@ -623,7 +693,8 @@ constexpr auto squares = generateTable(); // All at compile-time!
 ### constexpr Containers (C++20)
 
 ```cpp
-constexpr auto compute() {
+constexpr auto compute()
+{
     std::vector<int> vec = {1, 2, 3};
     vec.push_back(4);
     return vec[2]; // Returns 3
@@ -632,7 +703,8 @@ constexpr auto compute() {
 constexpr int result = compute(); // All at compile-time!
 
 // Complex compile-time data structures
-constexpr auto buildMap() {
+constexpr auto buildMap()
+{
     std::map<int, std::string> m;
     m[1] = "one";
     m[2] = "two";
@@ -645,7 +717,8 @@ constexpr auto buildMap() {
 
 ```cpp
 // ✅ Ensure compile-time initialization
-constexpr int computeValue() {
+constexpr int computeValue()
+{
     return 42 * 2;
 }
 
@@ -659,25 +732,37 @@ constinit std::atomic<int> counter{0}; // Safe global
 
 ```cpp
 template<typename T>
-auto process(T value) {
-    if constexpr (std::is_integral_v<T>) {
+auto process(T value)
+{
+    if constexpr (std::is_integral_v<T>)
+    {
         return value * 2;
-    } else if constexpr (std::is_floating_point_v<T>) {
+    }
+    else if constexpr (std::is_floating_point_v<T>)
+    {
         return value * 2.0;
-    } else if constexpr (std::is_same_v<T, std::string>) {
+    }
+    else if constexpr (std::is_same_v<T, std::string>)
+    {
         return value + value;
-    } else {
+    }
+    else
+    {
         return value;
     }
 }
 
 // Type-specific optimization
 template<typename T>
-void optimizedSort(std::vector<T>& vec) {
-    if constexpr (sizeof(T) <= 8 && std::is_trivially_copyable_v<T>) {
+void optimizedSort(std::vector<T>& vec)
+{
+    if constexpr (sizeof(T) <= 8 && std::is_trivially_copyable_v<T>)
+    {
         // Use fast radix sort for small trivial types
         radixSort(vec);
-    } else {
+    }
+    else
+    {
         // Use std::sort for complex types
         std::sort(vec.begin(), vec.end());
     }
@@ -701,8 +786,10 @@ t.join();
 } // Automatically joins here
 
 // ✅ GOOD: Cancellation support
-std::jthread t([](std::stop_token stoken) {
-    while (!stoken.stop_requested()) {
+std::jthread t([](std::stop_token stoken)
+{
+    while (!stoken.stop_requested())
+    {
         doWork();
         std::this_thread::sleep_for(100ms);
     }
@@ -720,7 +807,8 @@ t.request_stop(); // Cooperative cancellation
 // ✅ Lock-free counter
 std::atomic<int> counter{0};
 
-void increment() {
+void increment()
+{
     counter.fetch_add(1, std::memory_order_relaxed);
 }
 
@@ -747,11 +835,14 @@ ready.wait(false); // Efficient blocking wait
 
 ```cpp
 // ✅ One-time synchronization point
-void parallelProcess(const std::vector<Task>& tasks) {
+void parallelProcess(const std::vector<Task>& tasks)
+{
     std::latch done{tasks.size()};
     
-    for (const auto& task : tasks) {
-        std::jthread([&task, &done] {
+    for (const auto& task : tasks)
+    {
+        std::jthread([&task, &done]
+        {
             task.execute();
             done.count_down();
         });
@@ -761,17 +852,20 @@ void parallelProcess(const std::vector<Task>& tasks) {
 }
 
 // ✅ Reusable synchronization barrier
-void phaseProcessing() {
+void phaseProcessing()
+{
     std::barrier sync_point{4}; // 4 threads
     
-    for (int phase = 0; phase < 10; ++phase) {
+    for (int phase = 0; phase < 10; ++phase)
+    {
         doWork(phase);
         sync_point.arrive_and_wait(); // Synchronize between phases
     }
 }
 
 // Barrier with completion function
-std::barrier sync{4, []() noexcept {
+std::barrier sync{4, []() noexcept
+{
     std::cout << "All threads synchronized!\n";
 }};
 ```
@@ -804,7 +898,8 @@ int sum = std::reduce(std::execution::par, vec.begin(), vec.end());
 
 ```cpp
 // ✅ Thread-safe lazy initialization (Magic Static)
-Widget& getWidget() {
+Widget& getWidget()
+{
     static Widget instance; // Initialized exactly once
     return instance;
 }
@@ -813,8 +908,10 @@ Widget& getWidget() {
 std::once_flag flag;
 Resource* resource = nullptr;
 
-void initResource() {
-    std::call_once(flag, [] {
+void initResource()
+{
+    std::call_once(flag, []
+    {
         resource = new Resource();
     });
 }
@@ -822,11 +919,14 @@ void initResource() {
 // Thread-safe static initialization (C++20)
 std::atomic<Config*> config{nullptr};
 
-Config& getConfig() {
-    if (auto* p = config.load(std::memory_order_acquire)) {
+Config& getConfig()
+{
+    if (auto* p = config.load(std::memory_order_acquire))
+    {
         return *p;
     }
-    std::call_once(flag, [] {
+    std::call_once(flag, []
+    {
         config.store(new Config(), std::memory_order_release);
     });
     return *config.load();
@@ -841,18 +941,23 @@ Config& getConfig() {
 
 ```cpp
 // ✅ Exception-safe resource handling
-class FileHandle {
+class FileHandle
+{
     FILE* file;
 public:
     explicit FileHandle(const char* name) 
-        : file(fopen(name, "r")) {
-        if (!file) {
+        : file(fopen(name, "r"))
+    {
+        if (!file)
+        {
             throw std::runtime_error("Failed to open");
         }
     }
     
-    ~FileHandle() {
-        if (file) {
+    ~FileHandle()
+    {
+        if (file)
+        {
             fclose(file);
         }
     }
@@ -864,8 +969,10 @@ public:
     FileHandle(FileHandle&& other) noexcept 
         : file(std::exchange(other.file, nullptr)) {}
     
-    FileHandle& operator=(FileHandle&& other) noexcept {
-        if (this != &other) {
+    FileHandle& operator=(FileHandle&& other) noexcept
+    {
+        if (this != &other)
+        {
             if (file) fclose(file);
             file = std::exchange(other.file, nullptr);
         }
@@ -881,13 +988,15 @@ public:
 ```cpp
 // Manual RAII guard
 template<typename F>
-struct ScopeExit {
+struct ScopeExit
+{
     F func;
     bool active = true;
     
     explicit ScopeExit(F f) : func(std::move(f)) {}
     
-    ~ScopeExit() {
+    ~ScopeExit()
+    {
         if (active) func();
     }
     
@@ -897,7 +1006,8 @@ struct ScopeExit {
     ScopeExit& operator=(const ScopeExit&) = delete;
 };
 
-void process() {
+void process()
+{
     void* buffer = malloc(1024);
     ScopeExit cleanup{[&] { free(buffer); }};
     
@@ -913,20 +1023,24 @@ void process() {
 
 ```cpp
 // ✅ Strong exception safety
-class Container {
+class Container
+{
     std::vector<int> data;
 public:
-    void add(int value) {
+    void add(int value)
+    {
         data.push_back(value); // If throws, nothing changes
     }
     
     // No-throw swap for strong guarantee
-    void swap(Container& other) noexcept {
+    void swap(Container& other) noexcept
+    {
         data.swap(other.data);
     }
     
     // Copy-and-swap idiom for strong guarantee
-    Container& operator=(const Container& other) {
+    Container& operator=(const Container& other)
+    {
         Container temp(other); // Copy
         swap(temp);            // No-throw swap
         return *this;          // Old data destroyed
@@ -938,7 +1052,8 @@ public:
 
 ```cpp
 // ✅ Mark non-throwing functions
-void criticalFunction() noexcept {
+void criticalFunction() noexcept
+{
     // Compiler can optimize better
     // std::terminate called if exception thrown
 }
@@ -946,12 +1061,14 @@ void criticalFunction() noexcept {
 // Conditional noexcept
 template<typename T>
 void move_if_noexcept_helper(T& obj) 
-    noexcept(std::is_nothrow_move_constructible_v<T>) {
+    noexcept(std::is_nothrow_move_constructible_v<T>)
+{
     // ...
 }
 
 // Move operations should be noexcept
-class MyClass {
+class MyClass
+{
     std::vector<int> data;
 public:
     MyClass(MyClass&&) noexcept = default;
@@ -969,7 +1086,8 @@ public:
 #include <source_location>
 
 void log(std::string_view message,
-         std::source_location loc = std::source_location::current()) {
+         std::source_location loc = std::source_location::current())
+{
     std::cout << "File: " << loc.file_name() << "\n"
               << "Line: " << loc.line() << "\n"
               << "Function: " << loc.function_name() << "\n"
@@ -1006,7 +1124,8 @@ uint32_t value = 0x12345678;
 uint32_t swapped = std::byteswap(value); // 0x78563412
 
 // Endianness detection
-if constexpr (std::endian::native == std::endian::little) {
+if constexpr (std::endian::native == std::endian::little)
+{
     // Little endian system
 }
 ```
@@ -1016,8 +1135,10 @@ if constexpr (std::endian::native == std::endian::little) {
 ```cpp
 #include <utility>
 
-int getCategory(int value) {
-    switch (value) {
+int getCategory(int value)
+{
+    switch (value)
+    {
         case 0: return 1;
         case 1: return 2;
         case 2: return 3;
@@ -1030,13 +1151,15 @@ int getCategory(int value) {
 ### std::assume (C++23) - Compiler Assumptions
 
 ```cpp
-void process(int* ptr, size_t size) {
+void process(int* ptr, size_t size)
+{
     [[assume(ptr != nullptr)]];
     [[assume(size > 0)]];
     [[assume(size % 4 == 0)]]; // Alignment hint
     
     // Compiler can optimize based on assumptions
-    for (size_t i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i)
+    {
         ptr[i] *= 2;
     }
 }
@@ -1048,9 +1171,11 @@ void process(int* ptr, size_t size) {
 #include <coroutine>
 
 // Simple generator
-generator<int> fibonacci() {
+generator<int> fibonacci()
+{
     int a = 0, b = 1;
-    while (true) {
+    while (true)
+    {
         co_yield a;
         auto tmp = a;
         a = b;
@@ -1059,13 +1184,15 @@ generator<int> fibonacci() {
 }
 
 // Usage
-for (int num : fibonacci()) {
+for (int num : fibonacci())
+{
     if (num > 100) break;
     std::cout << num << " ";
 }
 
 // Async task
-task<int> asyncCompute() {
+task<int> asyncCompute()
+{
     co_await startAsyncOperation();
     int result = co_await getResult();
     co_return result;
@@ -1077,7 +1204,8 @@ task<int> asyncCompute() {
 ```cpp
 #include <compare>
 
-struct Point {
+struct Point
+{
     int x, y;
     
     // ✅ One operator generates all comparisons
@@ -1087,10 +1215,12 @@ struct Point {
 };
 
 // Custom three-way comparison
-struct Custom {
+struct Custom
+{
     int value;
     
-    std::strong_ordering operator<=>(const Custom& other) const {
+    std::strong_ordering operator<=>(const Custom& other) const
+    {
         return value <=> other.value;
     }
 };
@@ -1382,12 +1512,14 @@ g++ -std=c++23 -O3 -DNDEBUG -march=x86-64 -flto \
 **1. Using -ffast-math incorrectly:**
 ```cpp
 // This WILL break with -ffast-math!
-if (x != x) {  // NaN check
+if (x != x)  // NaN check
+{
     // Won't work with -ffast-math
 }
 
 // Use this instead:
-if (std::isnan(x)) {
+if (std::isnan(x))
+{
     // Always works
 }
 ```
