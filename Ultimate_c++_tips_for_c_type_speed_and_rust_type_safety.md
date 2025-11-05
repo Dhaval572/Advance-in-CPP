@@ -7,12 +7,11 @@ Professional tips and tricks for writing blazingly fast and memory-safe C++ usin
 ## Table of Contents
 1. [Memory Safety](#memory-safety)
 2. [Performance Optimization](#performance-optimization)
-3. [Modern C++ Best Practices](#modern-cpp-best-practices)
-4. [Compile-Time Programming](#compile-time-programming)
-5. [Concurrency & Parallelism](#concurrency--parallelism)
-6. [Error Handling](#error-handling)
-7. [Advanced Features](#advanced-features)
-8. [Professional Compiler Flags Guide](#professional-compiler-flags-guide)
+3. [Compile-Time Programming](#compile-time-programming)
+4. [Concurrency & Parallelism](#concurrency--parallelism)
+5. [Error Handling](#error-handling)
+6. [Advanced Features](#advanced-features)
+7. [Professional Compiler Flags Guide](#professional-compiler-flags-guide)
 
 ---
 
