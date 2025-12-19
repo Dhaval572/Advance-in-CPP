@@ -95,11 +95,11 @@ int i = static_cast<int>(f);  // Truncates to 3
 class Base {};
 class Derived : public Base {};
 
-Derived* derived = new Derived();
-Base* base = static_cast<Base*>(derived);  // Upcast (safe)
+Derived* derived_ptr = new Derived();
+Base* base_ptr = static_cast<Base*>(derived_ptr);  // Upcast (safe)
 
-Base* basePtr = new Derived();
-Derived* derivedPtr = static_cast<Derived*>(basePtr);  // Downcast (unsafe without checking)
+Base* base_ptr2 = new Derived();
+Derived* derived_ptr2 = static_cast<Derived*>(base_ptr2);  // Downcast (unsafe without checking)
 ```
 
 ### 2. dynamic_cast
@@ -124,29 +124,37 @@ dynamic_cast<new_type>(expression)
 
 **Examples:**
 ```cpp
-class Base {
+class Base 
+{
     virtual void dummy() {}  // Makes class polymorphic
 };
 
-class Derived : public Base {
-    void specificMethod() {}
+class Derived : public Base 
+{
+    void specific_method() {}
 };
 
 Base* base = new Derived();
 
 // Safe downcast with runtime checking
 Derived* derived = dynamic_cast<Derived*>(base);
-if (derived != nullptr) {
-    derived->specificMethod();  // Safe to call
-} else {
+if (derived != nullptr) 
+{
+    derived->specific_method();  // Safe to call
+} 
+else 
+{
     // Cast failed
 }
 
 // With references (throws exception on failure)
-try {
-    Base& baseRef = *base;
-    Derived& derivedRef = dynamic_cast<Derived&>(baseRef);
-} catch (std::bad_cast& e) {
+try 
+{
+    Base& base_ref = *base;
+    Derived& derived_ref = dynamic_cast<Derived&>(base_ref);
+} 
+catch (std::bad_cast& e) 
+{
     // Handle cast failure
 }
 ```
@@ -170,21 +178,22 @@ const_cast<new_type>(expression)
 **Examples:**
 ```cpp
 // Removing const
-const int* constPtr = new int(42);
-int* modifiablePtr = const_cast<int*>(constPtr);
-*modifiablePtr = 100;  // Dangerous if original object was truly const!
+const int* const_ptr = new int(42);
+int* modifiable_ptr = const_cast<int*>(const_ptr);
+*modifiable_ptr = 100;  // Dangerous if original object was truly const!
 
 // Safe usage: when you know the object wasn't originally const
-void legacyFunction(char* str);  // Old API without const
+void legacy_function(char* str);  // Old API without const
 
-void modernFunction(const char* str) {
-    // We know legacyFunction won't modify str
-    legacyFunction(const_cast<char*>(str));
+void modern_function(const char* str) 
+{
+    // We know legacy_function won't modify str
+    legacy_function(const_cast<char*>(str));
 }
 
 // Adding const
 int* ptr = new int(10);
-const int* constPtr2 = const_cast<const int*>(ptr);
+const int* const_ptr2 = const_cast<const int*>(ptr);
 ```
 
 ### 4. reinterpret_cast
@@ -212,19 +221,19 @@ uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
 std::cout << "Address: 0x" << std::hex << addr << std::endl;
 
 // Integer to pointer (dangerous!)
-int* restoredPtr = reinterpret_cast<int*>(addr);
+int* restored_ptr = reinterpret_cast<int*>(addr);
 
 // Unrelated pointer types
 struct A { int x; };
 struct B { float y; };
 
-A* aPtr = new A{10};
-B* bPtr = reinterpret_cast<B*>(aPtr);  // Reinterprets memory as B
+A* a_ptr = new A{10};
+B* b_ptr = reinterpret_cast<B*>(a_ptr);  // Reinterprets memory as B
 
 // Type punning (reading object as different type)
 float f = 3.14f;
-int* intView = reinterpret_cast<int*>(&f);
-std::cout << "Float bits: " << *intView << std::endl;
+int* int_view = reinterpret_cast<int*>(&f);
+std::cout << "Float bits: " << *int_view << std::endl;
 ```
 
 ### 5. std::bit_cast (C++20) - The Modern Safe Alternative
@@ -272,7 +281,8 @@ uint32_t bits = std::bit_cast<uint32_t>(f);
 #include <cmath>
 
 // Example 1: Float to uint32_t conversion (IEEE 754 inspection)
-void inspectFloat() {
+void inspect_float() 
+{
     float f = 3.14159f;
     uint32_t bits = std::bit_cast<uint32_t>(f);
     
@@ -291,33 +301,39 @@ void inspectFloat() {
 }
 
 // Example 2: Double to uint64_t for hashing
-uint64_t hashDouble(double d) {
+uint64_t hash_double(double d) 
+{
     uint64_t bits = std::bit_cast<uint64_t>(d);
     return bits ^ (bits >> 32);  // Simple hash function
 }
 
 // Example 3: Endianness detection
-bool isLittleEndian() {
+bool is_little_endian() 
+{
     uint32_t value = 0x01020304;
     std::array<uint8_t, 4> bytes = std::bit_cast<std::array<uint8_t, 4>>(value);
     return bytes[0] == 0x04;  // Little endian: least significant byte first
 }
 
 // Example 4: Custom type to array of bytes
-struct Point3D {
+struct Point3D 
+{
     float x, y, z;
 };
 
-std::array<uint8_t, 12> serializePoint(const Point3D& point) {
+std::array<uint8_t, 12> serialize_point(const Point3D& point) 
+{
     return std::bit_cast<std::array<uint8_t, 12>>(point);
 }
 
-Point3D deserializePoint(const std::array<uint8_t, 12>& bytes) {
+Point3D deserialize_point(const std::array<uint8_t, 12>& bytes) 
+{
     return std::bit_cast<Point3D>(bytes);
 }
 
 // Example 5: Checking for NaN without floating-point comparison
-bool isNaNFast(float f) {
+bool is_nan_fast(float f) 
+{
     uint32_t bits = std::bit_cast<uint32_t>(f);
     uint32_t exponent = (bits >> 23) & 0xFF;
     uint32_t mantissa = bits & 0x7FFFFF;
@@ -326,7 +342,8 @@ bool isNaNFast(float f) {
 
 // Example 6: Safe memcpy alternative for trivial types
 template<typename To, typename From>
-To safe_type_pun(const From& src) {
+To safe_type_pun(const From& src) 
+{
     static_assert(sizeof(To) == sizeof(From), "Sizes must match");
     static_assert(std::is_trivially_copyable_v<From>, "From must be trivially copyable");
     static_assert(std::is_trivially_copyable_v<To>, "To must be trivially copyable");
@@ -356,7 +373,8 @@ uint32_t bits = std::bit_cast<uint32_t>(f);
 
 2. **Fast equality comparison for floating-point:**
 ```cpp
-bool bitwiseEqual(float a, float b) {
+bool bitwise_equal(float a, float b) 
+{
     return std::bit_cast<uint32_t>(a) == std::bit_cast<uint32_t>(b);
     // Note: This treats -0.0 and +0.0 as different, NaN == NaN as false
 }
@@ -364,7 +382,8 @@ bool bitwiseEqual(float a, float b) {
 
 3. **Serialization/deserialization:**
 ```cpp
-struct NetworkPacket {
+struct NetworkPacket 
+{
     uint32_t id;
     uint16_t length;
     uint16_t checksum;
@@ -380,24 +399,26 @@ NetworkPacket received = std::bit_cast<NetworkPacket>(bytes);
 4. **Creating specific floating-point values:**
 ```cpp
 // Create a quiet NaN with custom payload
-uint32_t nanBits = 0x7FC00000 | 0x12345;  // Exponent all 1s, mantissa non-zero
-float customNaN = std::bit_cast<float>(nanBits);
+uint32_t nan_bits = 0x7FC00000 | 0x12345;  // Exponent all 1s, mantissa non-zero
+float custom_nan = std::bit_cast<float>(nan_bits);
 ```
 
 5. **Type punning for performance-critical code:**
 ```cpp
 // Fast abs for float (clear sign bit)
-float fastAbs(float f) {
+float fast_abs(float f) 
+{
     uint32_t bits = std::bit_cast<uint32_t>(f);
     bits &= 0x7FFFFFFF;  // Clear sign bit
     return std::bit_cast<float>(bits);
 }
 
 // Fast copysign
-float fastCopySign(float magnitude, float sign) {
-    uint32_t magBits = std::bit_cast<uint32_t>(magnitude) & 0x7FFFFFFF;
-    uint32_t signBit = std::bit_cast<uint32_t>(sign) & 0x80000000;
-    return std::bit_cast<float>(magBits | signBit);
+float fast_copy_sign(float magnitude, float sign) 
+{
+    uint32_t mag_bits = std::bit_cast<uint32_t>(magnitude) & 0x7FFFFFFF;
+    uint32_t sign_bit = std::bit_cast<uint32_t>(sign) & 0x80000000;
+    return std::bit_cast<float>(mag_bits | sign_bit);
 }
 ```
 
@@ -408,13 +429,13 @@ float fastCopySign(float magnitude, float sign) {
 // double d = std::bit_cast<double>(int(42));
 
 // ❌ Won't compile - not trivially copyable
-// std::string str = std::bit_cast<std::string>(someBytes);
+// std::string str = std::bit_cast<std::string>(some_bytes);
 
 // ❌ Won't compile - pointers aren't values
-// int* ptr = std::bit_cast<int*>(someUintptr);
+// int* ptr = std::bit_cast<int*>(some_uintptr);
 
 // ✅ Use reinterpret_cast for pointer conversions (when absolutely necessary)
-int* ptr = reinterpret_cast<int*>(someUintptr);
+int* ptr = reinterpret_cast<int*>(some_uintptr);
 ```
 
 **Compile-Time Usage (constexpr):**
@@ -422,17 +443,19 @@ int* ptr = reinterpret_cast<int*>(someUintptr);
 One of the most powerful features of `std::bit_cast` is that it can be used in constexpr contexts:
 
 ```cpp
-constexpr uint32_t floatToUint(float f) {
+constexpr uint32_t float_to_uint(float f) 
+{
     return std::bit_cast<uint32_t>(f);
 }
 
-constexpr float uintToFloat(uint32_t bits) {
+constexpr float uint_to_float(uint32_t bits) 
+{
     return std::bit_cast<float>(bits);
 }
 
 // Compile-time constant
-constexpr uint32_t pieBits = floatToUint(3.14159f);
-constexpr float reconstructed = uintToFloat(pieBits);
+constexpr uint32_t pie_bits = float_to_uint(3.14159f);
+constexpr float reconstructed = uint_to_float(pie_bits);
 
 static_assert(reconstructed == 3.14159f);
 ```
@@ -442,18 +465,19 @@ static_assert(reconstructed == 3.14159f);
 ```cpp
 // Old unsafe pattern (pre-C++20)
 float f = 3.14f;
-uint32_t oldWay1 = *reinterpret_cast<uint32_t*>(&f);  // UB: aliasing violation
+uint32_t old_way1 = *reinterpret_cast<uint32_t*>(&f);  // UB: aliasing violation
 
-union {
+union 
+{
     float f;
     uint32_t u;
-} oldWay2;
-oldWay2.f = 3.14f;
-uint32_t bits = oldWay2.u;  // Technically UB in C++ (OK in C)
+} old_way2;
+old_way2.f = 3.14f;
+uint32_t bits = old_way2.u;  // Technically UB in C++ (OK in C)
 
 // New safe pattern (C++20+)
 float f = 3.14f;
-uint32_t newWay = std::bit_cast<uint32_t>(f);  // Always safe!
+uint32_t new_way = std::bit_cast<uint32_t>(f);  // Always safe!
 ```
 
 ---
@@ -493,8 +517,8 @@ int i = static_cast<int>(d);  // Explicit conversion needed (narrowing)
 Base* base = new Derived();
 Derived* derived = static_cast<Derived*>(base);  // Explicit downcast
 
-const int* constPtr = new int(10);
-int* ptr = const_cast<int*>(constPtr);  // Explicit const removal
+const int* const_ptr = new int(10);
+int* ptr = const_cast<int*>(const_ptr);  // Explicit const removal
 ```
 
 ### Widening vs Narrowing Conversions
@@ -528,12 +552,12 @@ int x = static_cast<int>(d);      // Truncation to 3
 
 ✅ **Good:**
 ```cpp
-int* ptr = static_cast<int*>(voidPtr);
+int* ptr = static_cast<int*>(void_ptr);
 ```
 
 ❌ **Avoid:**
 ```cpp
-int* ptr = (int*)voidPtr;
+int* ptr = (int*)void_ptr;
 ```
 
 **Why?** C++ casts are:
@@ -545,18 +569,21 @@ int* ptr = (int*)voidPtr;
 ### 2. **Use dynamic_cast for Safe Downcasting**
 
 ```cpp
-Base* base = getObject();  // Could be Base or Derived
+Base* base = get_object();  // Could be Base or Derived
 
 // Safe approach
-if (Derived* derived = dynamic_cast<Derived*>(base)) {
-    derived->derivedMethod();
-} else {
+if (Derived* derived = dynamic_cast<Derived*>(base)) 
+{
+    derived->derived_method();
+} 
+else 
+{
     // Handle case where it's not a Derived
 }
 
 // Unsafe approach (undefined behavior if wrong type)
 Derived* derived = static_cast<Derived*>(base);
-derived->derivedMethod();  // Crash if base isn't actually Derived!
+derived->derived_method();  // Crash if base isn't actually Derived!
 ```
 
 **Tip:** If you find yourself using dynamic_cast frequently, consider redesigning with virtual functions.
@@ -567,7 +594,8 @@ Instead of removing const, design your functions properly:
 
 ❌ **Bad:**
 ```cpp
-void process(const std::string& str) {
+void process(const std::string& str) 
+{
     std::string& mutable_str = const_cast<std::string&>(str);
     mutable_str += " modified";  // Undefined behavior!
 }
@@ -575,7 +603,8 @@ void process(const std::string& str) {
 
 ✅ **Good:**
 ```cpp
-std::string process(const std::string& str) {
+std::string process(const std::string& str) 
+{
     std::string result = str;
     result += " modified";
     return result;
@@ -600,9 +629,10 @@ double percentage = (static_cast<double>(scored) / total) * 100;
 ### 5. **Casting in Conditional Expressions**
 
 ```cpp
-if (auto* derived = dynamic_cast<Derived*>(basePtr)) {
+if (auto* derived = dynamic_cast<Derived*>(base_ptr)) 
+{
     // Use derived here
-    derived->derivedMethod();
+    derived->derived_method();
 }  // derived goes out of scope
 ```
 
@@ -622,7 +652,8 @@ volatile uint32_t* gpio_register =
 ### 7. **Explicit Constructors Prevent Implicit Conversions**
 
 ```cpp
-class MyClass {
+class MyClass 
+{
     int value;
 public:
     explicit MyClass(int v) : value(v) {}
@@ -630,7 +661,8 @@ public:
 
 void func(MyClass obj) {}
 
-int main() {
+int main() 
+{
     // func(42);  // Error: implicit conversion not allowed
     func(MyClass(42));  // OK: explicit construction
     func(static_cast<MyClass>(42));  // OK: explicit cast
@@ -642,13 +674,15 @@ int main() {
 ```cpp
 // Instead of casting, use type traits
 template<typename T, typename U>
-auto add(T a, U b) -> decltype(a + b) {
+auto add(T a, U b) -> decltype(a + b) 
+{
     return a + b;  // Compiler handles conversions
 }
 
 // Or with C++14 auto return type
 template<typename T, typename U>
-auto multiply(T a, U b) {
+auto multiply(T a, U b) 
+{
     return a * b;
 }
 ```
@@ -658,9 +692,10 @@ auto multiply(T a, U b) {
 ```cpp
 #include <typeinfo>
 
-Base* base = getObject();
+Base* base = get_object();
 
-if (typeid(*base) == typeid(Derived)) {
+if (typeid(*base) == typeid(Derived)) 
+{
     // It's a Derived object
     Derived* derived = static_cast<Derived*>(base);
 }
@@ -706,14 +741,15 @@ int rounded = static_cast<int>(std::round(pi));  // Prints 3
 ```cpp
 Base* base = new Base();  // Not a Derived!
 Derived* derived = static_cast<Derived*>(base);
-derived->derivedMethod();  // Undefined behavior!
+derived->derived_method();  // Undefined behavior!
 ```
 
 ✅ **Solution:**
 ```cpp
-Base* base = getObject();
-if (auto* derived = dynamic_cast<Derived*>(base)) {
-    derived->derivedMethod();  // Safe
+Base* base = get_object();
+if (auto* derived = dynamic_cast<Derived*>(base)) 
+{
+    derived->derived_method();  // Safe
 }
 ```
 
@@ -736,9 +772,9 @@ Don't modify objects that were originally declared const. Only use const_cast wh
 struct A { int x; };
 struct B { int x; double y; };
 
-A* aPtr = new A{10};
-B* bPtr = reinterpret_cast<B*>(aPtr);
-// Using bPtr->y is undefined behavior!
+A* a_ptr = new A{10};
+B* b_ptr = reinterpret_cast<B*>(a_ptr);
+// Using b_ptr->y is undefined behavior!
 ```
 
 ✅ **Solution:**
@@ -747,7 +783,7 @@ Only use reinterpret_cast when you fully understand the memory layout and are su
 ### Pitfall 5: Casting Away Volatile
 
 ```cpp
-volatile int* vol = getHardwareRegister();
+volatile int* vol = get_hardware_register();
 int* regular = const_cast<int*>(vol);  // Removes volatile!
 // Compiler may optimize away reads/writes to 'regular'
 ```
@@ -763,13 +799,15 @@ For dynamic_cast to work, ensure RTTI (Run-Time Type Information) is enabled:
 ### Best Practice 2: Virtual Destructors in Base Classes
 
 ```cpp
-class Base {
+class Base 
+{
 public:
     virtual ~Base() = default;  // Essential for polymorphism
     virtual void func() {}
 };
 
-class Derived : public Base {
+class Derived : public Base 
+{
     int* data = new int[100];
 public:
     ~Derived() { delete[] data; }
@@ -783,7 +821,8 @@ delete ptr;  // Calls Derived destructor due to virtual ~Base()
 
 ```cpp
 template<typename T, typename U>
-T safe_cast(U value) {
+T safe_cast(U value) 
+{
     static_assert(sizeof(T) >= sizeof(U), 
                   "Target type must be large enough");
     return static_cast<T>(value);
@@ -826,7 +865,7 @@ uint32_t bits = *reinterpret_cast<uint32_t*>(&f);  // Violates strict aliasing
 ```cpp
 // Pointer conversions still need reinterpret_cast
 uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
-void* voidPtr = reinterpret_cast<void*>(rawAddress);
+void* void_ptr = reinterpret_cast<void*>(raw_address);
 ```
 
 ---
@@ -837,16 +876,20 @@ void* voidPtr = reinterpret_cast<void*>(rawAddress);
 
 ```cpp
 template<typename Derived>
-class Base {
+class Base 
+{
 public:
-    void interface() {
+    void interface() 
+    {
         static_cast<Derived*>(this)->implementation();
     }
 };
 
-class Derived : public Base<Derived> {
+class Derived : public Base<Derived> 
+{
 public:
-    void implementation() {
+    void implementation() 
+    {
         // Actual implementation
     }
 };
@@ -857,7 +900,8 @@ public:
 ### 2. Custom Type Casting Operators
 
 ```cpp
-class Celsius {
+class Celsius 
+{
     double temp;
 public:
     explicit Celsius(double t) : temp(t) {}
@@ -876,7 +920,8 @@ double d = static_cast<double>(c);  // Uses operator double()
 ### 3. Type Erasure with void* and Casting
 
 ```cpp
-class Any {
+class Any 
+{
     void* data;
     std::type_info const& type;
     
@@ -885,7 +930,8 @@ public:
     Any(T value) : data(new T(value)), type(typeid(T)) {}
     
     template<typename T>
-    T get() const {
+    T get() const 
+    {
         if (type != typeid(T)) throw std::bad_cast();
         return *static_cast<T*>(data);
     }
@@ -896,7 +942,8 @@ public:
 
 ```cpp
 template<typename T>
-void wrapper(T&& arg) {
+void wrapper(T&& arg) 
+{
     // Perfectly forward with casting if needed
     process(static_cast<T&&>(arg));  // Or std::forward<T>(arg)
 }
@@ -905,25 +952,27 @@ void wrapper(T&& arg) {
 ### 5. Alignment-Aware Casting
 
 ```cpp
-void* rawMemory = malloc(1024);
+void* raw_memory = malloc(1024);
 
 // Ensure proper alignment before casting
-if (reinterpret_cast<uintptr_t>(rawMemory) % alignof(MyClass) != 0) {
+if (reinterpret_cast<uintptr_t>(raw_memory) % alignof(MyClass) != 0) 
+{
     // Handle misalignment
 }
 
-MyClass* obj = reinterpret_cast<MyClass*>(rawMemory);
+MyClass* obj = reinterpret_cast<MyClass*>(raw_memory);
 new (obj) MyClass();  // Placement new
 ```
 
 ### 6. Safe Pointer Casting with std::shared_ptr
 
 ```cpp
-std::shared_ptr<Base> basePtr = std::make_shared<Derived>();
+std::shared_ptr<Base> base_ptr = std::make_shared<Derived>();
 
 // Use std::dynamic_pointer_cast for safe downcasting
-if (auto derivedPtr = std::dynamic_pointer_cast<Derived>(basePtr)) {
-    derivedPtr->derivedMethod();
+if (auto derived_ptr = std::dynamic_pointer_cast<Derived>(base_ptr)) 
+{
+    derived_ptr->derived_method();
 }
 
 // Also available: std::static_pointer_cast, std::const_pointer_cast
@@ -933,13 +982,15 @@ if (auto derivedPtr = std::dynamic_pointer_cast<Derived>(basePtr)) {
 
 ```cpp
 template<typename T, typename U>
-concept SafelyCastable = requires(U u) {
+concept SafelyCastable = requires(U u) 
+{
     { static_cast<T>(u) } -> std::convertible_to<T>;
 };
 
 template<typename T, typename U>
 requires SafelyCastable<T, U>
-T safe_convert(U value) {
+T safe_convert(U value) 
+{
     return static_cast<T>(value);
 }
 ```
@@ -952,8 +1003,8 @@ Derived derived;
 Base base = derived;  // Slices off Derived parts!
 
 // Solution: use references or pointers
-Base& baseRef = derived;  // No slicing
-Base* basePtr = &derived;  // No slicing
+Base& base_ref = derived;  // No slicing
+Base* base_ptr = &derived;  // No slicing
 ```
 
 ---
