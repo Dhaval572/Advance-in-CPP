@@ -32,7 +32,7 @@ int main()
 }
 /*
     +-----------------------------------+
-    | Why use variant instead of float? |
+    | Why use variant instead of union? |
     +-----------------------------------+
 
     1. Variants automatically track the active type
