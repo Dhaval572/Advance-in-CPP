@@ -324,10 +324,10 @@ struct ResourceDeleter
 
 ```cpp
 using TypePtr = std::unique_ptr
-    <
-        ActualType,                    // The C type (e.g., SDL_Window)
-        ResourceDeleter<DestroyFunc>   // The destroy function (e.g., SDL_DestroyWindow)
-    >;
+<
+    ActualType,                    // The C type (e.g., SDL_Window)
+    ResourceDeleter<DestroyFunc>   // The destroy function (e.g., SDL_DestroyWindow)
+>;
 ```
 
 ### Using The Smart Pointer
