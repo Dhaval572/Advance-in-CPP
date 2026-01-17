@@ -106,6 +106,7 @@ bool ends_correctly = std::ranges::ends_with(data_sequence, {4, 5});            
 ```cpp
 #include <expected>
 #include <string>
+#include <print>
 
 std::expected<int, std::string> Divide(int a, int b)
 {
@@ -116,7 +117,7 @@ std::expected<int, std::string> Divide(int a, int b)
     return a / b;
 }
 
-void ProcessResult()
+int main()
 {
     auto result = Divide(10, 2);
 
@@ -129,8 +130,9 @@ void ProcessResult()
         std::println("Error: {}", result.error());
     }
 
-    // Use value_or For Defaults
     int safe_result = Divide(10, 0).value_or(-1);
+    std::println("Safe result: {}", safe_result);
+    return 0;
 }
 ```
 
