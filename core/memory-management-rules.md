@@ -1,4 +1,8 @@
-# C++ Memory Management Rules
+# Memory Management Rules
+
+> **Description**: Core rules and best practices for managing memory in C++. Covers smart pointers, RAII, and common pitfalls.
+> **Usage**: Refer to these rules when designing resource-owning classes or handling dynamic memory.
+> **Prerequisites**: Basic understanding of C++ pointers and object lifecycle.
 
 ## 1. Use Smart Pointers Instead of Raw Pointers
 - Prefer **`std::unique_ptr`** for exclusive ownership.
