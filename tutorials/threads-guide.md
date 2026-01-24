@@ -12,10 +12,6 @@ A comprehensive guide to modern C++ multithreading, covering all features from C
 - [Async, Future, and Promise](#async-future-and-promise)
 - [Thread vs Async Comparison](#thread-vs-async-comparison)
 - [Modern Features (C++20/23)](#modern-features-c2023)
-- [CPU Management](#cpu-management)
-- [Best Practices](#best-practices)
-- [Common Patterns](#common-patterns)
-
 ---
 
 ## Introduction
