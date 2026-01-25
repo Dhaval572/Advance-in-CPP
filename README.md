@@ -7,7 +7,7 @@ Welcome to the Advanced C++ Documentation repository. This project serves as a c
 The repository is organized into logical directories to help you find information quickly:
 
 - **[`core/`](./core)**: Fundamental C++ concepts, memory management rules, RAII, and pointers.
-- **[`features/`](./features)**: Deep dives into features introduced in C++14, C++17, C++20, and C++23.
+- **[`C++ Philosophy/`](./features)**: Deep dives into features introduced in C++14, C++17, C++20, and C++23.
 - **[`examples/`](./examples)**: Ready-to-run C++ code snippets demonstrating specific techniques like multithreading, smart pointers, and design patterns.
 - **[`tutorials/`](./tutorials)**: High-level guides, mastering roadmaps, and conceptual explanations.
 - **[`tips/`](./tips)**: Performance optimization tricks, loops, string handling, and memory safety advice.
