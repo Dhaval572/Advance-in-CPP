@@ -30,7 +30,7 @@ Understanding operating systems and compiler architecture isn't just academic kn
     ┌───────────────┴───────────────┐
     |                               |
     |                               |
-Operating System              Compiler
+Operating Sys                    Compiler
     |                               |
     |                               |
     └───────────────┬───────────────┘
@@ -59,26 +59,53 @@ Understanding how the OS manages processes directly impacts how you write C++:
 - Why memory leaks persist until process termination
 
 **Memory Layout of a C++ Process**:
-
 ```
-High Address
-├─────────────────┐
-│   Stack         │ → Local variables, function calls
-│   ↓             │   (grows downward)
-│                 │
-│   (Free Space)  │
-│                 │
-│   ↑             │
-│   Heap          │ → Dynamic allocation (new/malloc)
-├─────────────────┤   (grows upward)
-│   BSS           │ → Uninitialized global/static variables
-├─────────────────┤
-│   Data          │ → Initialized global/static variables
-├─────────────────┤
-│   Text/Code     │ → Your compiled program instructions
-Low Address
+High Address (0xFFFFFFFF)
+┌─────────────────────────────────────────┐
+│    Kernel Space                         │
+│  (Privileged OS memory, not accessible  │
+│   to user processes)                    │
+├─────────────────────────────────────────┤
+│                                         │
+│        Stack                            │
+│    (Grows downward)                     │
+│  • Local variables                      │
+│  • Function parameters                  │
+│  • Return addresses                     │
+│  • Saved registers                      │
+│                                         │
+├─────────────────────────────────────────┤ ← Stack Pointer (SP)
+│               ↓                         │
+│                                         │
+│       (Unmapped Guard Pages)            │
+│                                         │
+│               ↑                         │
+├─────────────────────────────────────────┤ ← Program Break (brk)
+│        Heap                             │
+│    (Grows upward)                       │
+│  • Dynamically allocated memory         │
+│  • malloc/new allocations               │
+│                                         │
+├─────────────────────────────────────────┤
+│        Uninitialized Data (.bss)        │
+│  • Zero-initialized global/static vars  │
+│                                         │
+├─────────────────────────────────────────┤
+│        Initialized Data (.data)         │
+│  • Initialized global/static variables  │
+│  • Read-only data may be separate       │
+├─────────────────────────────────────────┤
+│        Read-Only Data (.rodata)         │
+│  • String literals                      │
+│  • Constants                            │
+│                                         │
+├─────────────────────────────────────────┤
+│        Text/Code Segment (.text)        │
+│  • Executable instructions              │
+│  • Machine code                         │
+└─────────────────────────────────────────┘
+Low Address (0x00000000)
 ```
-
 **Real Impact**: When you know this, you understand why stack overflow happens, why heap fragmentation occurs, and how to optimize memory access patterns.
 
 ### 2. System Calls and Context Switching
