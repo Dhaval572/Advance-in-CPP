@@ -136,7 +136,7 @@ public:
 ### 💥 Final Recommendation to Stand Out:
 
 1. **Master the fundamentals** (pointers, OOP, templates).
-2. **Learn the latest C++ standards** (C++11/14/17/20).
+2. **Learn the latest C++ standards** (C++11/14/17/20/23).
 3. **Write high-performance code** (move semantics, STL, concurrency).
 4. **Work on real-world projects** and **contribute to open-source**.
 
