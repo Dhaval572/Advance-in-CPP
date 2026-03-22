@@ -47,6 +47,12 @@ private:
     std::string       m_ConnStr;
     ConnectionHandle  m_Handle;
 };
+
+// --- Usage ---
+{
+    DatabaseConnection db("host=localhost;port=5432");
+    // use db ...
+}   // ✅ ~DatabaseConnection() fires here — connection closed automatically
 ```
 
 ```cpp
@@ -90,6 +96,13 @@ private:
 
     ProcessedData m_Data;
 };
+
+// --- Usage ---
+// ❌ Can't call constructor directly — it's private
+// DataProcessor proc(data);   // compile error
+
+// ✅ Must go through factory — object is always fully valid
+auto proc = DataProcessor::Create("report.json");
 ```
 
 ---
@@ -127,6 +140,9 @@ private:
     int         m_Health;
     float       m_Speed;
 };
+
+// --- Usage ---
+Player hero("Archer", 100, 5.5f);   // ✅ m_Name moved in, no copy made
 ```
 
 ### Initializer list is MANDATORY for these members
@@ -147,6 +163,10 @@ private:
     float&     m_Displacement; // reference member
     EngineId   m_Id;           // type with no default constructor
 };
+
+// --- Usage ---
+float disp = 2.0f;
+Engine v8(8, disp);   // ✅ m_Cylinders and m_Displacement set once, directly
 ```
 
 ### Initializer list order = declaration order
@@ -177,6 +197,9 @@ private:
     float m_X;   // initialized 1st
     float m_Y;   // initialized 2nd
 };
+
+// --- Usage ---
+Vector2D pos(3.0f, 4.0f);   // ✅ m_X = 3, m_Y = 4 — in declaration order, always
 ```
 
 ---
@@ -197,6 +220,9 @@ private:
     bool    m_Retry      = true;
     size_t  m_MaxRetries = 3;
 };
+
+// --- Usage ---
+Config cfg;   // ✅ all members already have safe defaults — no args needed
 ```
 
 ### Parameterized Constructor
@@ -215,6 +241,10 @@ private:
     std::string m_Url;
     std::string m_Method;
 };
+
+// --- Usage ---
+HttpRequest get_req("https://api.example.com/users");          // method defaults to "GET"
+HttpRequest post_req("https://api.example.com/users", "POST"); // explicit method
 ```
 
 ### Copy Constructor
@@ -234,6 +264,11 @@ private:
     size_t                      m_Size;
     std::unique_ptr<uint8_t[]>  m_Data;
 };
+
+// --- Usage ---
+Buffer buf_a(1024);
+Buffer buf_b(buf_a);   // ✅ deep copy — buf_b gets its own independent memory
+// Modifying buf_b does NOT affect buf_a — completely separate allocations
 ```
 
 ### Move Constructor
@@ -253,6 +288,12 @@ private:
     size_t                      m_Size;
     std::unique_ptr<uint8_t[]>  m_Data;
 };
+
+// --- Usage ---
+Buffer buf_a(1024);
+Buffer buf_b(std::move(buf_a));   // ✅ buf_b steals buf_a's memory — zero allocation
+// buf_a.m_Size == 0, buf_a.m_Data == nullptr — emptied, but still valid to destroy
+// buf_b owns the 1024 bytes now
 ```
 
 ### Converting Constructor
@@ -269,6 +310,12 @@ public:
 private:
     double m_Value;
 };
+
+// --- Usage ---
+Radius r(5.0);              // ✅ explicit — clear intent
+// Radius r = 5.0;          // ❌ compile error — implicit conversion blocked
+// Radius r = true;         // ❌ compile error — no silent bool → Radius
+// Radius r = 3.0f;         // ❌ compile error — no silent float → Radius
 ```
 
 ---
@@ -330,6 +377,14 @@ class Base
 public:
     virtual ~Base() = default;
 };
+
+class Derived : public Base
+{
+    std::vector<int> m_Items;   // freed correctly now
+};
+
+Base* obj = new Derived();
+delete obj;   // ✅ Derived::~Derived() runs first, then Base::~Base() — no leak
 ```
 
 ---
@@ -416,6 +471,18 @@ class Scene
 private:
     std::shared_ptr<Mesh> m_Mesh;   // reference-counted, safe to share
 };
+
+// --- Usage ---
+{
+    Scene s1;
+    // s1 goes out of scope here — unique_ptr destructor frees Mesh automatically
+    // No delete needed, no leak possible
+}
+
+// Shared ownership example
+auto mesh = std::make_shared<Mesh>();
+Scene scene_a;   // both scenes share the same Mesh
+Scene scene_b;   // Mesh freed only when LAST Scene holding it is destroyed
 ```
 
 ---
@@ -438,6 +505,13 @@ private:
     std::unique_ptr<Weapon> m_Weapon;
     // All members manage themselves — compiler-generated special functions are perfect
 };
+
+// --- Usage ---
+Player hero("Archer", {Item::Bow, Item::Arrow}, std::make_unique<Longbow>());
+
+Player hero_copy(hero);              // ✅ compiler-generated copy — deep copies string + vector, clones unique_ptr
+Player hero_moved(std::move(hero));  // ✅ compiler-generated move — steals all members, no allocation
+// hero is now in a valid but empty state
 ```
 
 ### Rule of Five — when you own raw resources
@@ -505,6 +579,18 @@ private:
     size_t   m_Size;
     uint8_t* m_Data;
 };
+
+// --- Usage — all five operations in action ---
+RawBuffer buf_a(256);                    // constructor        — allocates 256 bytes
+
+RawBuffer buf_b(buf_a);                  // copy constructor   — allocates new 256 bytes, copies content
+buf_b = buf_a;                           // copy assignment    — releases old, allocates new, copies content
+
+RawBuffer buf_c(std::move(buf_a));       // move constructor   — steals pointer, buf_a becomes empty (size=0, data=nullptr)
+buf_c = std::move(buf_b);               // move assignment    — releases buf_c's old memory, steals buf_b's pointer
+
+// buf_a and buf_b are now empty but still safe to destroy
+// buf_c owns the memory that originated in buf_b
 ```
 
 ---
@@ -602,6 +688,16 @@ private:
     int         m_Port;
     int         m_TimeoutMs;
 };
+
+// --- Usage — all three constructors funnel into one ---
+Server s1;                               // → delegates to Server("localhost", 8080)
+                                         //   → delegates to Server("localhost", 8080, 5000)
+                                         //   InitLogger() + InitMetrics() called once ✅
+
+Server s2("db.internal", 5432);          // → delegates to Server("db.internal", 5432, 5000)
+                                         //   InitLogger() + InitMetrics() called once ✅
+
+Server s3("cache.internal", 6379, 200);  // canonical constructor — called directly ✅
 ```
 
 ---
@@ -624,6 +720,16 @@ public:
     UniqueId& operator=(UniqueId&&) = default;
 };
 
+// --- Usage ---
+UniqueId id_a;
+UniqueId id_b;
+
+UniqueId id_c(id_a);              // ❌ compile error — copy constructor is deleted
+id_b = id_a;                      // ❌ compile error — copy assignment is deleted
+
+UniqueId id_d(std::move(id_a));   // ✅ move is allowed — ownership transferred
+id_b = std::move(id_d);           // ✅ move assignment — id_d is now empty, id_b owns it
+
 
 // Prevent heap allocation — force stack-only use
 class StackOnly
@@ -632,6 +738,11 @@ public:
     void* operator new(std::size_t)   = delete;
     void* operator new[](std::size_t) = delete;
 };
+
+// --- Usage ---
+StackOnly obj;                   // ✅ stack allocation — fine
+StackOnly* ptr = new StackOnly;  // ❌ compile error — operator new is deleted
+// Forces callers to always use stack lifetime — no accidental heap allocation
 
 
 // Singleton — delete all construction except controlled factory
@@ -650,6 +761,12 @@ public:
 private:
     AppConfig() = default;
 };
+
+// --- Usage ---
+AppConfig& cfg = AppConfig::Instance();   // ✅ only legal way to access it
+AppConfig  cfg2;                          // ❌ compile error — default constructor is private
+AppConfig  cfg3(cfg);                     // ❌ compile error — copy constructor is deleted
+cfg = AppConfig::Instance();              // ❌ compile error — copy assignment is deleted
 ```
 
 ---
@@ -691,6 +808,17 @@ public:
 private:
     int m_Fd = -1;
 };
+
+// --- Usage ---
+std::string ev_name = "InputSystem";
+EventSystem ev(std::move(ev_name));   // ✅ ev_name moved in — no string copy
+// ev_name is now "" — don't use it after move
+
+ev.RegisterHandler([]() { std::cout << "key pressed\n"; });   // ✅ lambda moved into vector
+
+Socket sock_a = CreateSocket();
+Socket sock_b(std::move(sock_a));   // ✅ sock_b steals the fd — sock_a.m_Fd is now -1
+// sock_a is safe to destroy — its destructor sees m_Fd == -1 and does nothing
 ```
 
 ---
@@ -721,6 +849,19 @@ public:
 private:
     float m_X, m_Y, m_Z;
 };
+
+// --- Usage — why noexcept on move matters ---
+std::vector<Vec3> points;
+points.reserve(3);
+points.emplace_back(1.0f, 0.0f, 0.0f);
+points.emplace_back(0.0f, 1.0f, 0.0f);
+points.emplace_back(0.0f, 0.0f, 1.0f);
+
+// When vector grows and reallocates:
+// ✅ Vec3 move constructor is noexcept → std::vector MOVES elements — zero extra allocation
+// ❌ If noexcept were missing  → std::vector COPIES elements — 3 extra Vec3 constructions
+
+float len = points[0].Length();   // ✅ noexcept — compiler can inline and optimize aggressively
 ```
 
 > **Rule:** If your move constructor can throw, `std::vector` will **copy** instead of move on reallocation.
@@ -766,6 +907,16 @@ public:
 
     virtual void Init() { }
 };
+
+// --- Usage — what actually happens with the bad version ---
+Derived d;
+// During construction: Base() runs → calls Init()
+// At that moment Derived is not yet alive → Base::Init() dispatches, not Derived::Init()
+// Derived::Init() NEVER runs — silent logic bug, no compile error, no crash warning
+
+// ✅ Good version
+auto obj = Base::Create();   // Derived fully constructed first, THEN Init() called
+obj->Init();                 // now virtual dispatch works correctly → Derived::Init() runs
 ```
 
 ### Never let exceptions escape destructors
@@ -818,6 +969,22 @@ private:
 
     Config m_Config;
 };
+
+// --- Usage ---
+// ❌ Old two-phase way — object exists but is unusable between these two lines
+AudioEngine bad_engine;
+bad_engine.Init("audio.cfg");   // someone could call Play() before this — undefined behaviour
+
+// ✅ Factory way — object is either fully ready or doesn't exist at all
+auto engine = AudioEngine::Create("audio.cfg");
+if (engine)
+{
+    engine->Play();   // ✅ guaranteed to be fully initialised here
+}
+else
+{
+    // creation failed cleanly — no half-constructed object floating around
+}
 ```
 
 ### Avoid `this` pointer escape in constructor
@@ -835,7 +1002,12 @@ public:
 
 // ✅ GOOD — register after construction
 auto widget = std::make_unique<Widget>();
-Registry::Register(widget.get());   // object is complete
+Registry::Register(widget.get());   // ✅ object is complete — all members initialised
+
+// Why the bad version breaks:
+// During Widget(), the vtable may not be set up yet
+// Any virtual dispatch via 'this' inside the constructor resolves wrong
+// Registry might call back into the object before construction finishes — crash or UB
 ```
 
 ---
