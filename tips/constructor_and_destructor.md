@@ -32,20 +32,20 @@
 class DatabaseConnection
 {
 public:
-    DatabaseConnection(std::string_view connection_string)
-        : connection_string_(connection_string),
-          handle_(OpenConnection(connection_string))  // acquire
+    DatabaseConnection(std::string_view conn_str)
+        : m_ConnStr(conn_str),
+          m_Handle(OpenConnection(conn_str))  // acquire
     {
     }
 
     ~DatabaseConnection()
     {
-        CloseConnection(handle_);  // release
+        CloseConnection(m_Handle);  // release
     }
 
 private:
-    std::string       connection_string_;
-    ConnectionHandle  handle_;
+    std::string       m_ConnStr;
+    ConnectionHandle  m_Handle;
 };
 ```
 
@@ -59,9 +59,12 @@ public:
         auto raw_data = LoadFile(file_path);       // I/O
         raw_data      = ParseJson(raw_data);       // parsing
         raw_data      = ValidateSchema(raw_data);  // validation
-        result_       = Transform(raw_data);       // transformation
+        m_Result      = Transform(raw_data);       // transformation
         // if ANY step throws, object is partially constructed — nightmare!
     }
+
+private:
+    ProcessedData m_Result;
 };
 ```
 
@@ -81,11 +84,11 @@ public:
 
 private:
     explicit DataProcessor(ProcessedData data)
-        : data_(std::move(data))
+        : m_Data(std::move(data))
     {
     }
 
-    ProcessedData data_;
+    ProcessedData m_Data;
 };
 ```
 
@@ -103,25 +106,26 @@ With an initializer list, members are **constructed once, directly** — one ope
 class Player
 {
 public:
-    std::string name_;
-    int         health_;
-    float       speed_;
-
     // ❌ BAD — default construct then assign (wasteful for non-trivial types)
     Player(std::string name, int health, float speed)
     {
-        name_   = name;    // default-construct "" then copy-assign
-        health_ = health;
-        speed_  = speed;
+        m_Name   = name;    // default-construct "" then copy-assign
+        m_Health = health;
+        m_Speed  = speed;
     }
 
     // ✅ GOOD — direct construction, no wasted step
     Player(std::string name, int health, float speed)
-        : name_(std::move(name)),   // move, not copy
-          health_(health),
-          speed_(speed)
+        : m_Name(std::move(name)),   // move, not copy
+          m_Health(health),
+          m_Speed(speed)
     {
     }
+
+private:
+    std::string m_Name;
+    int         m_Health;
+    float       m_Speed;
 };
 ```
 
@@ -131,17 +135,17 @@ public:
 class Engine
 {
 public:
-    Engine(int cylinder_count, float displacement)
-        : cylinder_count_(cylinder_count),    // const — MUST use initializer list
-          displacement_(displacement),         // reference — MUST use initializer list
-          id_(GenerateId())                    // no default constructor — MUST use initializer list
+    Engine(int cylinders, float& displacement)
+        : m_Cylinders(cylinders),       // const — MUST use initializer list
+          m_Displacement(displacement),  // reference — MUST use initializer list
+          m_Id(GenerateId())             // no default constructor — MUST use initializer list
     {
     }
 
 private:
-    const int       cylinder_count_;   // const member
-    float&          displacement_;     // reference member
-    UniqueEngine    id_;               // type with no default constructor
+    const int  m_Cylinders;    // const member
+    float&     m_Displacement; // reference member
+    EngineId   m_Id;           // type with no default constructor
 };
 ```
 
@@ -153,24 +157,25 @@ private:
 ```cpp
 class Vector2D
 {
-    float x_;   // initialized 1st
-    float y_;   // initialized 2nd
-
 public:
     // ✅ matches declaration order — clear and safe
     Vector2D(float x, float y)
-        : x_(x),
-          y_(y)
+        : m_X(x),
+          m_Y(y)
     {
     }
 
-    // ❌ reversed order in list, but x_ still initializes before y_ at runtime
-    // If y_ depended on x_, this would silently bug out
+    // ❌ reversed order in list, but m_X still initializes before m_Y at runtime
+    // If m_Y depended on m_X, this would silently bug out
     Vector2D(float x, float y)
-        : y_(y),
-          x_(x)
+        : m_Y(y),
+          m_X(x)
     {
     }
+
+private:
+    float m_X;   // initialized 1st
+    float m_Y;   // initialized 2nd
 };
 ```
 
@@ -188,9 +193,9 @@ public:
     Config() = default;   // let compiler generate it — zero overhead
 
 private:
-    int     timeout_ms_  = 5000;   // in-class default values (C++11)
-    bool    retry_       = true;
-    size_t  max_retries_ = 3;
+    int     m_TimeoutMs  = 5000;   // in-class default values (C++11)
+    bool    m_Retry      = true;
+    size_t  m_MaxRetries = 3;
 };
 ```
 
@@ -201,14 +206,14 @@ class HttpRequest
 {
 public:
     HttpRequest(std::string url, std::string method = "GET")
-        : url_(std::move(url)),
-          method_(std::move(method))
+        : m_Url(std::move(url)),
+          m_Method(std::move(method))
     {
     }
 
 private:
-    std::string url_;
-    std::string method_;
+    std::string m_Url;
+    std::string m_Method;
 };
 ```
 
@@ -219,15 +224,15 @@ class Buffer
 {
 public:
     Buffer(const Buffer& other)
-        : size_(other.size_),
-          data_(std::make_unique<uint8_t[]>(other.size_))
+        : m_Size(other.m_Size),
+          m_Data(std::make_unique<uint8_t[]>(other.m_Size))
     {
-        std::copy(other.data_.get(), other.data_.get() + size_, data_.get());
+        std::copy(other.m_Data.get(), other.m_Data.get() + m_Size, m_Data.get());
     }
 
 private:
-    size_t                      size_;
-    std::unique_ptr<uint8_t[]>  data_;
+    size_t                      m_Size;
+    std::unique_ptr<uint8_t[]>  m_Data;
 };
 ```
 
@@ -238,11 +243,15 @@ class Buffer
 {
 public:
     Buffer(Buffer&& other) noexcept
-        : size_(std::exchange(other.size_, 0)),
-          data_(std::move(other.data_))      // steal the resource
+        : m_Size(std::exchange(other.m_Size, 0)),
+          m_Data(std::move(other.m_Data))      // steal the resource
     {
         // other is now empty — valid but unspecified state
     }
+
+private:
+    size_t                      m_Size;
+    std::unique_ptr<uint8_t[]>  m_Data;
 };
 ```
 
@@ -253,12 +262,12 @@ class Radius
 {
 public:
     explicit Radius(double value)   // explicit prevents accidental implicit conversion
-        : value_(value)
+        : m_Value(value)
     {
     }
 
 private:
-    double value_;
+    double m_Value;
 };
 ```
 
@@ -285,7 +294,7 @@ private:
     {
         try
         {
-            ReleaseHandle(handle_);
+            ReleaseHandle(m_Handle);
         }
         catch (...)
         {
@@ -293,7 +302,7 @@ private:
         }
     }
 
-    Handle handle_;
+    Handle m_Handle;
 };
 ```
 
@@ -309,11 +318,11 @@ public:
 
 class Derived : public Base
 {
-    std::vector<int> data_;  // never freed!
+    std::vector<int> m_Items;  // never freed!
 };
 
-Base* ptr = new Derived();
-delete ptr;   // only Base::~Base() runs — Derived::~Derived() skipped
+Base* obj = new Derived();
+delete obj;   // only Base::~Base() runs — Derived::~Derived() skipped
 
 // ✅ GOOD
 class Base
@@ -336,9 +345,9 @@ class FileHandle
 {
 public:
     explicit FileHandle(const char* path, const char* mode)
-        : file_(std::fopen(path, mode))
+        : m_File(std::fopen(path, mode))
     {
-        if (!file_)
+        if (!m_File)
         {
             throw std::runtime_error("Failed to open file");
         }
@@ -346,9 +355,9 @@ public:
 
     ~FileHandle() noexcept
     {
-        if (file_)
+        if (m_File)
         {
-            std::fclose(file_);
+            std::fclose(m_File);
         }
     }
 
@@ -358,20 +367,20 @@ public:
 
     // Allow move
     FileHandle(FileHandle&& other) noexcept
-        : file_(std::exchange(other.file_, nullptr))
+        : m_File(std::exchange(other.m_File, nullptr))
     {
     }
 
-    std::FILE* Get() const noexcept { return file_; }
+    std::FILE* Get() const noexcept { return m_File; }
 
 private:
-    std::FILE* file_;
+    std::FILE* m_File;
 };
 
 // Usage — file closes automatically, even on exception
-void ProcessFile(const char* path)
+void ProcessLog(const char* path)
 {
-    FileHandle file(path, "r");
+    FileHandle log(path, "r");
     // ... do work ...
 }   // destructor runs here — guaranteed
 ```
@@ -382,27 +391,30 @@ void ProcessFile(const char* path)
 // ❌ BAD — manual memory management
 class Scene
 {
-    Mesh* mesh_;   // who owns this? when does it delete?
-
 public:
-    Scene() : mesh_(new Mesh()) { }
-    ~Scene() { delete mesh_; }   // easy to forget, easy to double-delete
+    Scene() : m_Mesh(new Mesh()) { }
+    ~Scene() { delete m_Mesh; }   // easy to forget, easy to double-delete
+
+private:
+    Mesh* m_Mesh;   // who owns this? when does it delete?
 };
 
 // ✅ GOOD — ownership is explicit and automatic
 class Scene
 {
-    std::unique_ptr<Mesh> mesh_;   // single owner, auto-deleted
-
 public:
-    Scene() : mesh_(std::make_unique<Mesh>()) { }
+    Scene() : m_Mesh(std::make_unique<Mesh>()) { }
     // No destructor needed — unique_ptr handles it
+
+private:
+    std::unique_ptr<Mesh> m_Mesh;   // single owner, auto-deleted
 };
 
 // ✅ GOOD — shared ownership
 class Scene
 {
-    std::shared_ptr<Mesh> mesh_;   // reference-counted, safe to share
+private:
+    std::shared_ptr<Mesh> m_Mesh;   // reference-counted, safe to share
 };
 ```
 
@@ -420,9 +432,10 @@ class Scene
 // ✅ Rule of Zero — nothing to define
 class Player
 {
-    std::string             name_;
-    std::vector<Item>       inventory_;
-    std::unique_ptr<Weapon> weapon_;
+private:
+    std::string             m_Name;
+    std::vector<Item>       m_Inventory;
+    std::unique_ptr<Weapon> m_Weapon;
     // All members manage themselves — compiler-generated special functions are perfect
 };
 ```
@@ -436,23 +449,23 @@ class RawBuffer
 {
 public:
     explicit RawBuffer(size_t size)
-        : size_(size),
-          data_(new uint8_t[size])
+        : m_Size(size),
+          m_Data(new uint8_t[size])
     {
     }
 
     // 1. Destructor
     ~RawBuffer() noexcept
     {
-        delete[] data_;
+        delete[] m_Data;
     }
 
     // 2. Copy constructor
     RawBuffer(const RawBuffer& other)
-        : size_(other.size_),
-          data_(new uint8_t[other.size_])
+        : m_Size(other.m_Size),
+          m_Data(new uint8_t[other.m_Size])
     {
-        std::copy(other.data_, other.data_ + size_, data_);
+        std::copy(other.m_Data, other.m_Data + m_Size, m_Data);
     }
 
     // 3. Copy assignment
@@ -460,19 +473,19 @@ public:
     {
         if (this != &other)
         {
-            uint8_t* new_data = new uint8_t[other.size_];
-            std::copy(other.data_, other.data_ + other.size_, new_data);
-            delete[] data_;
-            data_ = new_data;
-            size_ = other.size_;
+            uint8_t* new_data = new uint8_t[other.m_Size];
+            std::copy(other.m_Data, other.m_Data + other.m_Size, new_data);
+            delete[] m_Data;
+            m_Data = new_data;
+            m_Size = other.m_Size;
         }
         return *this;
     }
 
     // 4. Move constructor
     RawBuffer(RawBuffer&& other) noexcept
-        : size_(std::exchange(other.size_, 0)),
-          data_(std::exchange(other.data_, nullptr))
+        : m_Size(std::exchange(other.m_Size, 0)),
+          m_Data(std::exchange(other.m_Data, nullptr))
     {
     }
 
@@ -481,16 +494,16 @@ public:
     {
         if (this != &other)
         {
-            delete[] data_;
-            size_ = std::exchange(other.size_, 0);
-            data_ = std::exchange(other.data_, nullptr);
+            delete[] m_Data;
+            m_Size = std::exchange(other.m_Size, 0);
+            m_Data = std::exchange(other.m_Data, nullptr);
         }
         return *this;
     }
 
 private:
-    size_t   size_;
-    uint8_t* data_;
+    size_t   m_Size;
+    uint8_t* m_Data;
 };
 ```
 
@@ -504,10 +517,10 @@ class Timeout
 {
 public:
     // ❌ BAD — implicit conversion allowed
-    Timeout(int milliseconds) : ms_(milliseconds) { }
+    Timeout(int ms) : m_Ms(ms) { }
 
 private:
-    int ms_;
+    int m_Ms;
 };
 
 void Connect(Timeout t) { }
@@ -521,10 +534,10 @@ class Timeout
 {
 public:
     // ✅ GOOD — explicit blocks accidental conversions
-    explicit Timeout(int milliseconds) : ms_(milliseconds) { }
+    explicit Timeout(int ms) : m_Ms(ms) { }
 
 private:
-    int ms_;
+    int m_Ms;
 };
 
 Connect(Timeout(5000));   // ✅ must be intentional
@@ -542,18 +555,23 @@ class Server
 {
 public:
     Server()
-        : host_("localhost"), port_(8080), timeout_ms_(5000)
+        : m_Host("localhost"), m_Port(8080), m_TimeoutMs(5000)
     {
         InitLogger();
         InitMetrics();
     }
 
     Server(std::string host, int port)
-        : host_(std::move(host)), port_(port), timeout_ms_(5000)
+        : m_Host(std::move(host)), m_Port(port), m_TimeoutMs(5000)
     {
         InitLogger();    // duplicated
         InitMetrics();   // duplicated
     }
+
+private:
+    std::string m_Host;
+    int         m_Port;
+    int         m_TimeoutMs;
 };
 
 // ✅ GOOD — delegate to one canonical constructor
@@ -571,18 +589,18 @@ public:
     }
 
     Server(std::string host, int port, int timeout_ms)
-        : host_(std::move(host)),
-          port_(port),
-          timeout_ms_(timeout_ms)
+        : m_Host(std::move(host)),
+          m_Port(port),
+          m_TimeoutMs(timeout_ms)
     {
         InitLogger();    // runs once, from one place
         InitMetrics();
     }
 
 private:
-    std::string  host_;
-    int          port_;
-    int          timeout_ms_;
+    std::string m_Host;
+    int         m_Port;
+    int         m_TimeoutMs;
 };
 ```
 
@@ -645,7 +663,7 @@ class EventSystem
 public:
     // ✅ take by value + move when storing strings/vectors
     explicit EventSystem(std::string name)
-        : name_(std::move(name))   // move into member — zero copy
+        : m_Name(std::move(name))   // move into member — zero copy
     {
     }
 
@@ -653,12 +671,12 @@ public:
     template<typename T>
     void RegisterHandler(T&& handler)
     {
-        handlers_.emplace_back(std::forward<T>(handler));
+        m_Handlers.emplace_back(std::forward<T>(handler));
     }
 
 private:
-    std::string                          name_;
-    std::vector<std::function<void()>>   handlers_;
+    std::string                          m_Name;
+    std::vector<std::function<void()>>   m_Handlers;
 };
 
 // ✅ use std::exchange in move constructor for clean state reset
@@ -666,12 +684,12 @@ class Socket
 {
 public:
     Socket(Socket&& other) noexcept
-        : fd_(std::exchange(other.fd_, -1))   // steal fd, leave other in defined state
+        : m_Fd(std::exchange(other.m_Fd, -1))   // steal fd, leave other in defined state
     {
     }
 
 private:
-    int fd_ = -1;
+    int m_Fd = -1;
 };
 ```
 
@@ -687,7 +705,7 @@ public:
     // ✅ move constructor MUST be noexcept for STL optimizations
     // std::vector uses move only if move constructor is noexcept
     Vec3(Vec3&& other) noexcept
-        : x_(other.x_), y_(other.y_), z_(other.z_)
+        : m_X(other.m_X), m_Y(other.m_Y), m_Z(other.m_Z)
     {
     }
 
@@ -697,11 +715,11 @@ public:
     // ✅ trivial operations — mark noexcept for inlining hints
     float Length() const noexcept
     {
-        return std::sqrt(x_ * x_ + y_ * y_ + z_ * z_);
+        return std::sqrt(m_X * m_X + m_Y * m_Y + m_Z * m_Z);
     }
 
 private:
-    float x_, y_, z_;
+    float m_X, m_Y, m_Z;
 };
 ```
 
@@ -793,9 +811,12 @@ public:
     }
 
 private:
-    explicit AudioEngine(Config cfg) : cfg_(std::move(cfg)) { }
+    explicit AudioEngine(Config cfg)
+        : m_Config(std::move(cfg))
+    {
+    }
 
-    Config cfg_;
+    Config m_Config;
 };
 ```
 
