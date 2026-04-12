@@ -80,6 +80,67 @@ Number  →  Symbol
 10      →  newline
 ```
 
+### 3.1 Why is `A` the number 65 — and not 1?
+
+This is a great question. The short answer: **numbers 0–64 were already taken**.
+
+The ASCII table does not start with letters. It starts with **control characters** — invisible commands that old machines needed to function. For example:
+
+```
+Number  →  Meaning
+──────────────────────────────────────────
+0       →  Null (end of string marker)
+7       →  Bell (literally ring a bell on the terminal!)
+8       →  Backspace
+9       →  Tab
+10      →  Line Feed (move down one line)
+13      →  Carriage Return (move cursor to start of line)
+27      →  Escape
+```
+
+These came from the era of **teletype machines** (typewriter-like devices connected over wires). The numbers 0–31 are all such control commands. They have no visible shape — they perform actions.
+
+Then numbers 32–64 were given to **punctuation and digits**:
+
+```
+32  →  (space)
+33  →  !
+48  →  0   ← digits start here
+57  →  9   ← digits end here
+64  →  @
+```
+
+Only after all of that did the alphabet begin:
+
+```
+65  →  A   ← uppercase letters start here
+90  →  Z   ← uppercase letters end here
+97  →  a   ← lowercase letters start here
+122 →  z   ← lowercase letters end here
+```
+
+### 3.2 There is a Beautiful Pattern Hidden Here
+
+Notice the gap between `A` (65) and `a` (97) is exactly **32**.
+
+```
+'A'  =  65  =  01000001  (in binary)
+'a'  =  97  =  01100001  (in binary)
+                 ↑
+            only this one bit is different
+```
+
+This was a deliberate design choice. To convert any uppercase letter to lowercase, you just **flip one bit** (or add 32). Early computers could do this extremely fast — no lookup table needed, pure bit manipulation.
+
+```c
+char upper = 'A';           // 65
+char lower = upper + 32;    // 97 = 'a'
+// or with bitwise OR:
+char lower2 = upper | 32;   // same result, one CPU instruction
+```
+
+This is why 65 was chosen for `A` — not because it is a random number, but because it was the first available slot after reserving space for control characters and symbols, and it created this elegant 32-apart uppercase/lowercase relationship.
+
 So when you write `'A'` in your code, the compiler quietly stores the number **65**.  
 When you print it with `%c`, the terminal looks up 65 in the ASCII table and draws the letter **A**.
 
