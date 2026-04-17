@@ -646,6 +646,17 @@ inline void operator delete(void* ptr, const char* /*file*/, int /*line*/) noexc
     std::free(ptr);
 }
 
+// Also provide array forms with source location
+inline void* operator new[](std::size_t size, const char* file, int line)
+{
+    return ::operator new(size, file, line);
+}
+
+inline void operator delete[](void* ptr, const char* file, int line) noexcept
+{
+    ::operator delete(ptr, file, line);
+}
+
 // ---------------------------------------------------------------
 // Step 4: Redirect 'new' — must be the LAST thing before your own code
 // ---------------------------------------------------------------
@@ -666,9 +677,9 @@ void load_scene()
     int*    ids    = new int[64];
     char*   name   = new char[32];
 
-    std::free(ground);
-    std::free(ids);
-    std::free(name);
+    delete ground;   // must use delete, not free
+    delete[] ids;
+    delete[] name;
 
     print_file_stats();
 }
@@ -922,6 +933,11 @@ void operator delete(void* ptr) noexcept
 void* operator new[](std::size_t size, const char* file, int line)
 {
     return ::operator new(size, file, line);
+}
+
+void operator delete[](void* ptr, const char* file, int line) noexcept
+{
+    ::operator delete(ptr, file, line);
 }
 
 void operator delete[](void* ptr) noexcept
