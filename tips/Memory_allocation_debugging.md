@@ -43,7 +43,7 @@ Your Code         →    operator new()     →    malloc()    →    OS Memory
   new Bullet()         ↑ hook here!
 ```
 
-`operator new` is just a regular C++ function. You can replace it globally, per-class,
+`operator new` is just a regular C++ operator. You can replace it globally, per-class,
 per-scope, or per-file. That single hook point is everything we need.
 
 ### What "Zero Overhead" Actually Means
