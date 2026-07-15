@@ -35,7 +35,7 @@ Contributions are welcome! If you'd like to add new documentation or examples:
 
 1.  **Follow the Style Guide**: Adhere to the established directory structure and naming conventions.
 2.  **Document Your Code**: Ensure every file has a descriptive header and all functions are commented.
-3.  **Use Modern C++**: Prefer modern alternatives (e.g., `std::unique_ptr` over raw `new`/`delete`, Note: Don't use 1 `shared_ptr` blindly).
+3.  **Use Modern C++**: Prefer modern alternatives (e.g., `std::unique_ptr` over raw `new`/`delete`, Note: Don't use `shared_ptr` blindly).
 4.  **Submit a PR**: Create a new branch and submit a pull request with a clear description of your changes.
 
 ## 📚 Key Resources
