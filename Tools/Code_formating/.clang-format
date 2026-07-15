@@ -1,0 +1,17 @@
+# ======================================================================= #
+# This is my own way of formatting c++. You can use this if you like this #
+# ======================================================================= #
+
+BasedOnStyle: LLVM
+# ============================================================ #
+# NOTES:                                                       #
+# - All other settings inherit from LLVM style                 #
+# - To see the full configuration:                             #
+#   $ clang-format --dump-config                               #
+# ============================================================ #
+
+# My own configuration
+BreakBeforeBraces: Allman
+IndentWidth: 4
+NamespaceIndentation: All
+TabWidth: 4
