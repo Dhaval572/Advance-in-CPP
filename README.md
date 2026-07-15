@@ -11,6 +11,7 @@ The repository is organized into logical directories to help you find informatio
 - **[`examples/`](./examples)**: Ready-to-run C++ code snippets demonstrating specific techniques like multithreading, smart pointers, and design patterns.
 - **[`C++ Philosophy/`](./C++%20Philosophy)**: High-level guides, mastering roadmaps, and conceptual explanations.
 - **[`tips/`](./tips)**: Performance optimization tricks, loops, string handling, and memory safety advice.
+- **[`Tools/`](./Tools)**: Practical guides for modern C++ development tools, including debuggers, testing frameworks, static analyzers, sanitizers, profilers, documentation generators, build systems, and package managers. This section focuses on modern, industry-standard tools with practical workflows, best practices, and references to their official documentation.
 
 ## 🚀 Getting Started
 
